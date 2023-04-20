@@ -1,4 +1,4 @@
-use std::{ascii::AsciiExt, fmt::Display};
+use std::fmt::Display;
 
 fn array_diff<T: PartialEq + Display>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
     let a: Vec<T> = a.into_iter().filter(|x| !b.contains(x)).collect();
@@ -70,10 +70,10 @@ fn find_missing_letter(chars: &[char]) -> char {
 }
 
 fn disemvowel(s: &str) -> String {
-    const vowels: &str = "aeiou";
+    const VOWELS: &str = "aeiou";
 
     s.chars()
-        .filter(|c| vowels.find(c.to_ascii_lowercase()).is_none())
+        .filter(|c| VOWELS.find(c.to_ascii_lowercase()).is_none())
         .collect()
 }
 
@@ -116,9 +116,76 @@ fn find_outlier(values: &[i32]) -> i32 {
         .unwrap()
 }
 
+fn persistence(num: u64) -> u64 {
+    let multiply_digits = |x: u64| -> u64 {
+        let mut mult: u64 = 1;
+        x.to_string()
+            .chars()
+            .map(|c| c.to_digit(10).expect("invalid digit") as u64)
+            .for_each(|d| mult *= d);
+
+        mult
+    };
+
+    let count_digits = |x: u64| -> u64 { x.to_string().len() as u64 };
+
+    let mut i = 0;
+    let mut num = num;
+    while count_digits(num) > 1 {
+        num = multiply_digits(num);
+        i += 1;
+    }
+
+    i
+}
+
+fn move_zeros(arr: &[u8]) -> Vec<u8> {
+    let mut v: Vec<u8> = vec![0; arr.len()];
+    let mut j = 0;
+    for i in 0..arr.len() {
+        if arr[i] != 0 {
+            v[j] = arr[i];
+            j += 1;
+        }
+    }
+
+    v
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn dotest(a: &[u8], expected: &[u8]) {
+        let actual = move_zeros(a);
+        assert!(
+            actual == expected,
+            "With arr = {a:?}\nExpected {expected:?} but got {actual:?}"
+        )
+    }
+
+    #[test]
+    fn move_zeros_sample_tests() {
+        dotest(
+            &[1, 2, 0, 1, 0, 1, 0, 3, 0, 1],
+            &[1, 2, 1, 1, 3, 1, 0, 0, 0, 0],
+        );
+        dotest(
+            &[9, 0, 0, 9, 1, 2, 0, 1, 0, 1, 0, 3, 0, 1, 9, 0, 0, 0, 0, 9],
+            &[9, 9, 1, 2, 1, 1, 3, 1, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        );
+        dotest(&[0, 0], &[0, 0]);
+        dotest(&[0], &[0]);
+        dotest(&[], &[]);
+    }
+
+    #[test]
+    fn persistence_sample_tests() {
+        assert_eq!(super::persistence(39), 3);
+        assert_eq!(super::persistence(4), 0);
+        assert_eq!(super::persistence(25), 2);
+        assert_eq!(super::persistence(999), 4);
+    }
 
     #[test]
     fn basic_test() {
