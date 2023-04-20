@@ -152,11 +152,105 @@ fn move_zeros(arr: &[u8]) -> Vec<u8> {
     v
 }
 
+fn good_vs_evil(good: &str, evil: &str) -> String {
+    let g_vals = [1, 2, 3, 3, 4, 10];
+    let e_vals = [1, 2, 2, 2, 3, 5, 10];
+    let get_cnt = |strn: &str, vals: &[u32]| {
+        let mut cnt = 0;
+        let mut i = 0;
+        for x in strn.split(' ') {
+            if let Ok(d) = x.parse::<u32>() {
+                cnt += vals[i] * d;
+                i += 1;
+            }
+        }
+
+        cnt
+    };
+
+    let g_cnt = get_cnt(good, &g_vals);
+    let e_cnt = get_cnt(evil, &e_vals);
+
+    if g_cnt > e_cnt {
+        String::from("Battle Result: Good triumphs over Evil")
+    } else if g_cnt < e_cnt {
+        String::from("Battle Result: Evil eradicates all trace of Good")
+    } else {
+        String::from("Battle Result: No victor on this battle field")
+    }
+}
+
+fn multiplication_table(len: usize) -> Vec<Vec<usize>> {
+    let mut table = vec![vec![0; len]; len];
+
+    for i in 0..len {
+        for j in 0..len {
+            table[i][j] = (j + 1) * (i + 1);
+        }
+    }
+
+    table
+}
+
+fn parts_sums(ls: &[u64]) -> Vec<u64> {
+    let mut ret: Vec<u64> = vec![0; ls.len() + 1];
+
+    let s = ls.iter().sum();
+    ret[0] = s;
+    for i in 1..ret.len() {
+        ret[i] = ret[i - 1] - ls[i - 1]
+    }
+
+    ret
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn dotest(a: &[u8], expected: &[u8]) {
+    fn dotest(ls: Vec<u64>, expect: Vec<u64>) {
+        let actual = parts_sums(&ls);
+        assert_eq!(actual, expect);
+    }
+
+    #[test]
+    fn example() {
+        dotest(vec![], vec![0]);
+        dotest(vec![0, 1, 3, 6, 10], vec![20, 20, 19, 16, 10, 0]);
+        dotest(vec![1, 2, 3, 4, 5, 6], vec![21, 20, 18, 15, 11, 6, 0]);
+        dotest(
+            vec![
+                744125, 935, 407, 454, 430, 90, 144, 6710213, 889, 810, 2579358,
+            ],
+            vec![
+                10037855, 9293730, 9292795, 9292388, 9291934, 9291504, 9291414, 9291270, 2581057,
+                2580168, 2579358, 0,
+            ],
+        );
+    }
+
+    #[test]
+    fn basic() {
+        assert_eq!(multiplication_table(3), [[1, 2, 3], [2, 4, 6], [3, 6, 9]]);
+    }
+
+    #[test]
+    fn returns_expected() {
+        assert_eq!(
+            good_vs_evil("0 0 0 0 0 10", "0 0 0 0 0 0 0"),
+            "Battle Result: Good triumphs over Evil"
+        );
+        assert_eq!(
+            good_vs_evil("0 0 0 0 0 0", "0 0 0 0 0 0 10"),
+            "Battle Result: Evil eradicates all trace of Good"
+        );
+        assert_eq!(
+            good_vs_evil("0 0 0 0 0 10", "0 0 0 0 0 0 10"),
+            "Battle Result: No victor on this battle field"
+        );
+    }
+
+    fn mz_dotest(a: &[u8], expected: &[u8]) {
         let actual = move_zeros(a);
         assert!(
             actual == expected,
@@ -166,17 +260,17 @@ mod tests {
 
     #[test]
     fn move_zeros_sample_tests() {
-        dotest(
+        mz_dotest(
             &[1, 2, 0, 1, 0, 1, 0, 3, 0, 1],
             &[1, 2, 1, 1, 3, 1, 0, 0, 0, 0],
         );
-        dotest(
+        mz_dotest(
             &[9, 0, 0, 9, 1, 2, 0, 1, 0, 1, 0, 3, 0, 1, 9, 0, 0, 0, 0, 9],
             &[9, 9, 1, 2, 1, 1, 3, 1, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         );
-        dotest(&[0, 0], &[0, 0]);
-        dotest(&[0], &[0]);
-        dotest(&[], &[]);
+        mz_dotest(&[0, 0], &[0, 0]);
+        mz_dotest(&[0], &[0]);
+        mz_dotest(&[], &[]);
     }
 
     #[test]
