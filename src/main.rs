@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::fmt::Display;
+use std::str;
 
 fn array_diff<T: PartialEq + Display>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
     let a: Vec<T> = a.into_iter().filter(|x| !b.contains(x)).collect();
@@ -283,9 +284,59 @@ where
     */
 }
 
+fn revrot(s: &str, c: usize) -> String {
+    if c <= 0 || s.is_empty() || c > s.len() {
+        return String::new();
+    }
+
+    let mut ret = String::with_capacity(s.len());
+    for chunk in s.as_bytes().chunks(c) {
+        if chunk.len() < c {
+            continue;
+        }
+
+        let sum_cubed_digits: u32 = chunk.iter().fold(0, |acc, x| {
+            if let Some(d) = (*x as char).to_digit(10) {
+                acc + d.pow(3)
+            } else {
+                acc
+            }
+        });
+
+        if sum_cubed_digits % 2 == 0 {
+            // reverse
+            for &byte in chunk.iter().rev() {
+                ret.push(byte as char);
+            }
+        } else {
+            // rotate
+            for &byte in chunk.iter().skip(1) {
+                ret.push(byte as char);
+            }
+            ret.push(*(chunk.get(0).unwrap()) as char);
+        }
+    }
+
+    ret
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn testing(s: &str, c: usize, exp: &str) -> () {
+        assert_eq!(&revrot(s, c), exp)
+    }
+    #[test]
+    fn basics_revrot() {
+        testing("1234", 0, "");
+        testing("", 0, "");
+        testing("1234", 5, "");
+        let s = "733049910872815764";
+        testing(s, 5, "330479108928157");
+        let s = "73304991087281576455176044327690580265896";
+        testing(s, 8, "1994033775182780067155464327690480265895");
+    }
 
     #[test]
     fn sample_test() {
