@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::collections::HashMap;
 use std::fmt::Display;
 
 fn array_diff<T: PartialEq + Display>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
@@ -206,9 +207,119 @@ fn parts_sums(ls: &[u64]) -> Vec<u64> {
     ret
 }
 
+fn parse(code: &str) -> Vec<i32> {
+    let mut ret: Vec<i32> = vec![];
+    let mut val: i32 = 0;
+    for c in code.chars() {
+        match c {
+            'i' => {
+                val += 1;
+            }
+            'd' => {
+                val -= 1;
+            }
+            's' => {
+                val = val.pow(2);
+            }
+            'o' => {
+                ret.push(val);
+            }
+            _ => (),
+        };
+    }
+
+    ret
+}
+
+fn sum_pairs(ints: &[i8], s: i8) -> Option<(i8, i8)> {
+    // construct a hashmap of value to index
+    // iterate through ints
+    // for each int check if s - int[i] exists in hashmap
+    // if it does, and the index is greater than i but less than curr, store it in tup
+
+    let map: HashMap<&i8, usize> = ints.iter().enumerate().map(|e| (e.1, e.0)).collect();
+    let mut curr: Option<(i8, i8)> = None;
+    for (i, x) in ints.iter().enumerate() {
+        if let Some(ind) = map.get(&(s - *x)) {
+            match curr {
+                Some((a, b)) => {
+                    if *ind > i && ind < map.get(&b).unwrap() {
+                        curr = Some((a, ints[i]));
+                    }
+                }
+                None => curr = Some((*x, s - *x)),
+            }
+        }
+    }
+
+    curr
+}
+
+fn unique_in_order<T>(sequence: T) -> Vec<T::Item>
+where
+    T: std::iter::IntoIterator,
+    T::Item: std::cmp::PartialEq + std::fmt::Debug,
+{
+    sequence
+        .into_iter()
+        .fold(vec![], |mut acc: Vec<T::Item>, x| {
+            if let Some(y) = acc.last() {
+                if *y != x {
+                    acc.push(x);
+                }
+            } else if acc.len() < 1 {
+                acc.push(x);
+            }
+
+            acc
+        })
+
+    /*
+        use std::iter::FromIterator;
+            /* ...fn declaration... */
+            let mut vec = Vec::from_iter(iter);
+            vec.dedup();
+            vec
+    */
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sample_test() {
+        assert_eq!(
+            unique_in_order("AAAABBBCCDAABBB".chars()),
+            vec!['A', 'B', 'C', 'D', 'A', 'B']
+        );
+    }
+
+    // #[test]
+    // fn sum_pairs_returns_expected() {
+    //     let l1 = [1, 4, 8, 7, 3, 15];
+    //     let l2 = [1, -2, 3, 0, -6, 1];
+    //     let l3 = [20, -13, 40];
+    //     let l4 = [1, 2, 3, 4, 1, 0];
+    //     let l5 = [10, 5, 2, 3, 7, 5];
+    //     let l6 = [4, -2, 3, 3, 4];
+    //     let l7 = [0, 2, 0];
+    //     let l8 = [5, 9, 13, -3];
+    //     assert_eq!(sum_pairs(&l1, 8), Some((1, 7)));
+    //     assert_eq!(sum_pairs(&l2, -6), Some((0, -6)));
+    //     assert_eq!(sum_pairs(&l3, -7), None);
+    //     assert_eq!(sum_pairs(&l4, 2), Some((1, 1)));
+    //     assert_eq!(sum_pairs(&l5, 10), Some((3, 7)));
+    //     assert_eq!(sum_pairs(&l6, 8), Some((4, 4)));
+    //     assert_eq!(sum_pairs(&l7, 0), Some((0, 0)));
+    //     assert_eq!(sum_pairs(&l8, 10), Some((13, -3)));
+    // }
+
+    #[test]
+    fn deadfish_sample_tests() {
+        assert_eq!(parse("iiisdoso"), vec![8, 64]);
+        assert_eq!(parse("iiisdosodddddiso"), vec![8, 64, 3600]);
+    }
 
     fn dotest(ls: Vec<u64>, expect: Vec<u64>) {
         let actual = parts_sums(&ls);
