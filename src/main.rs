@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::str;
@@ -64,7 +65,7 @@ fn find_missing_letter(chars: &[char]) -> char {
         None => return 'a',
     };
 
-    for (a, c) in (&alpha[idx..idx + chars.len()]).chars().zip(chars.iter()) {
+    for (a, c) in (alpha[idx..idx + chars.len()]).chars().zip(chars.iter()) {
         if a != *c {
             return a;
         }
@@ -108,7 +109,7 @@ fn find_outlier(values: &[i32]) -> i32 {
             let even: Vec<&i32> = w.iter().filter(|&&x| x % 2 == 0).collect();
             let odd: Vec<&i32> = w.iter().filter(|&&x| x % 2 != 0).collect();
 
-            if even.len() > 0 && odd.len() > 0 {
+            if !even.is_empty() && !odd.is_empty() {
                 return Some(if even.len() > odd.len() {
                     odd[0]
                 } else {
@@ -146,9 +147,9 @@ fn persistence(num: u64) -> u64 {
 fn move_zeros(arr: &[u8]) -> Vec<u8> {
     let mut v: Vec<u8> = vec![0; arr.len()];
     let mut j = 0;
-    for i in 0..arr.len() {
-        if arr[i] != 0 {
-            v[j] = arr[i];
+    for item in arr {
+        if *item != 0 {
+            v[j] = *item;
             j += 1;
         }
     }
@@ -175,21 +176,19 @@ fn good_vs_evil(good: &str, evil: &str) -> String {
     let g_cnt = get_cnt(good, &g_vals);
     let e_cnt = get_cnt(evil, &e_vals);
 
-    if g_cnt > e_cnt {
-        String::from("Battle Result: Good triumphs over Evil")
-    } else if g_cnt < e_cnt {
-        String::from("Battle Result: Evil eradicates all trace of Good")
-    } else {
-        String::from("Battle Result: No victor on this battle field")
+    match g_cnt.cmp(&e_cnt) {
+        Ordering::Greater => String::from("Battle Result: Good triumphs over Evil"),
+        Ordering::Less => String::from("Battle Result: Evil eradicates all trace of Good"),
+        Ordering::Equal => String::from("Battle Result: No victor on this battle field"),
     }
 }
 
 fn multiplication_table(len: usize) -> Vec<Vec<usize>> {
     let mut table = vec![vec![0; len]; len];
 
-    for i in 0..len {
-        for j in 0..len {
-            table[i][j] = (j + 1) * (i + 1);
+    for (i, row) in table.iter_mut().enumerate() {
+        for (j, cell) in row.iter_mut().enumerate() {
+            *cell = (j + 1) * (i + 1);
         }
     }
 
@@ -268,7 +267,7 @@ where
                 if *y != x {
                     acc.push(x);
                 }
-            } else if acc.len() < 1 {
+            } else if acc.is_empty() {
                 acc.push(x);
             }
 
@@ -285,7 +284,7 @@ where
 }
 
 fn revrot(s: &str, c: usize) -> String {
-    if c <= 0 || s.is_empty() || c > s.len() {
+    if c == 0 || s.is_empty() || c > s.len() {
         return String::new();
     }
 
@@ -313,16 +312,39 @@ fn revrot(s: &str, c: usize) -> String {
             for &byte in chunk.iter().skip(1) {
                 ret.push(byte as char);
             }
-            ret.push(*(chunk.get(0).unwrap()) as char);
+            ret.push(*(chunk.first().unwrap()) as char);
         }
     }
 
     ret
 }
 
+fn camel_case(str: &str) -> String {
+    str.split(' ').fold(String::new(), |mut acc, word| {
+        acc.extend(word.chars().enumerate().map(|(i, c)| {
+            if i == 0 {
+                c.to_uppercase().next().unwrap()
+            } else {
+                c
+            }
+        }));
+
+        acc
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn camel_case_sample_test() {
+        assert_eq!(camel_case("test case"), "TestCase");
+        assert_eq!(camel_case("camel case method"), "CamelCaseMethod");
+        assert_eq!(camel_case("say hello "), "SayHello");
+        assert_eq!(camel_case(" camel case word"), "CamelCaseWord");
+        assert_eq!(camel_case(""), "");
+    }
 
     fn testing(s: &str, c: usize, exp: &str) -> () {
         assert_eq!(&revrot(s, c), exp)
