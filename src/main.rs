@@ -333,9 +333,101 @@ fn camel_case(str: &str) -> String {
     })
 }
 
+pub fn three_sum(nums: Vec<i32>) -> Vec<Vec<i32>> {
+    // naive approach: triple nested for loop that explicitly checks the condition
+    // runtime: O(n^3)
+
+    // can be improved by iterating through with a double for-loop and calculating
+    // sums of pairs, then iterating once more for the third index
+    // ^ gonna try this implementation
+    // tried the implementation and it didn't work; didn't test for duplicates.
+
+    // Actual solution (I didn't come up with this):
+    // sort the vec, loop through it and have two pointers that look at the rest of the array
+    // whenever a triplet is found, add it to a set
+
+    use std::collections::HashSet;
+    let mut nums = nums;
+    nums.sort();
+
+    let mut sol = HashSet::new();
+    let mut j = nums.iter().enumerate().skip(1).peekable(); // n guaranteed to be at least length 3
+    let mut k = nums.iter().enumerate().rev().peekable();
+
+    nums.iter().enumerate().fold(&mut sol, |acc, (i, num)| {
+        if let (Some((ji, jn)), Some((ki, kn))) = (j.peek(), k.peek()) {
+            if (i != *ji && i != *ki && *ji != *ki) && (*num + **jn + **kn) == 0 {
+                acc.insert(vec![*num, **jn, **kn]);
+                j.next();
+                k.next();
+            }
+        }
+
+        acc
+    });
+
+    let len = sol.len();
+    sol.drain().fold(Vec::with_capacity(len), |mut acc, v| {
+        acc.push(v);
+        acc
+    })
+}
+
+fn get_submatrix(ind: usize, matrix: &[Vec<i64>]) -> Vec<Vec<i64>> {
+    assert!(ind < matrix.len());
+
+    let mut x: Vec<Vec<i64>> = Vec::with_capacity(matrix.len() - 1);
+
+    for row in matrix.iter().skip(1) {
+        x.push(
+            row.iter()
+                .enumerate()
+                .filter(|(i, _)| *i != ind)
+                .map(|(_, x)| *x)
+                .collect::<Vec<i64>>(),
+        )
+    }
+
+    return x;
+}
+
+fn print_matrix(matrix: &[Vec<i64>]) {
+    for row in matrix {
+        println!("{:?}", &row);
+    }
+}
+
+fn determinant(matrix: &[Vec<i64>]) -> i64 {
+    if matrix.len() == 1 {
+        return matrix[0][0];
+    }
+
+    let mut det = 0;
+    let mut polarity: i8 = 1;
+    for (i, cell) in matrix[0].iter().enumerate() {
+        det += (polarity as i64) * (*cell * determinant(&get_submatrix(i, matrix)));
+        polarity *= -1;
+    }
+
+    det
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const DET_ERR_MSG: &str = "\nYour result (left) did not match the expected output (right)";
+
+    fn det_dotest(a: &[Vec<i64>], expected: i64) {
+        assert_eq!(determinant(a), expected, "{DET_ERR_MSG}")
+    }
+
+    #[test]
+    fn determinant_test() {
+        det_dotest(&[vec![1]], 1);
+        det_dotest(&[vec![1, 3], vec![2, 5]], -1);
+        det_dotest(&[vec![2, 5, 3], vec![1, -2, -1], vec![1, 3, 4]], -20);
+    }
 
     #[test]
     fn camel_case_sample_test() {
@@ -367,26 +459,6 @@ mod tests {
             vec!['A', 'B', 'C', 'D', 'A', 'B']
         );
     }
-
-    // #[test]
-    // fn sum_pairs_returns_expected() {
-    //     let l1 = [1, 4, 8, 7, 3, 15];
-    //     let l2 = [1, -2, 3, 0, -6, 1];
-    //     let l3 = [20, -13, 40];
-    //     let l4 = [1, 2, 3, 4, 1, 0];
-    //     let l5 = [10, 5, 2, 3, 7, 5];
-    //     let l6 = [4, -2, 3, 3, 4];
-    //     let l7 = [0, 2, 0];
-    //     let l8 = [5, 9, 13, -3];
-    //     assert_eq!(sum_pairs(&l1, 8), Some((1, 7)));
-    //     assert_eq!(sum_pairs(&l2, -6), Some((0, -6)));
-    //     assert_eq!(sum_pairs(&l3, -7), None);
-    //     assert_eq!(sum_pairs(&l4, 2), Some((1, 1)));
-    //     assert_eq!(sum_pairs(&l5, 10), Some((3, 7)));
-    //     assert_eq!(sum_pairs(&l6, 8), Some((4, 4)));
-    //     assert_eq!(sum_pairs(&l7, 0), Some((0, 0)));
-    //     assert_eq!(sum_pairs(&l8, 10), Some((13, -3)));
-    // }
 
     #[test]
     fn deadfish_sample_tests() {
@@ -601,5 +673,7 @@ mod tests {
 }
 
 fn main() {
-    println!("Run cargo test!");
+    let x = three_sum(vec![-1, 0, 1, 2, -1, -4]);
+
+    println!("{:?}", x);
 }
